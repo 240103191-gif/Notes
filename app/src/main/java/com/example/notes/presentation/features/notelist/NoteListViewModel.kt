@@ -1,0 +1,69 @@
+package com.example.notes.presentation.features.notelist
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.notes.domain.model.Quote
+import com.example.notes.domain.repository.NoteRepository
+import com.example.notes.domain.repository.QuoteRepository
+import com.example.notes.presentation.components.withMinLoadingDelay
+import com.example.notes.presentation.navigation.AppNavigator
+import com.example.notes.presentation.navigation.Screen
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+class NoteListViewModel(
+    private val noteRepository: NoteRepository,
+    private val quoteRepository: QuoteRepository,
+    private val navigator: AppNavigator,
+) : ViewModel() {
+
+    private var quoteDeferred: Deferred<Quote?>? = null
+
+    private val _state = MutableStateFlow(NoteListState())
+    val state: StateFlow<NoteListState> = _state
+        .onStart { loadNotes() }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(),
+            initialValue = NoteListState(),
+        )
+
+    init {
+        quoteDeferred = viewModelScope.async {
+            quoteRepository.getQuote()
+        }
+    }
+
+    fun onCreateClick() {
+        navigator.navigate(Screen.NoteCreateRoute)
+    }
+
+    fun onNoteClick(noteId: Long) {}
+
+    private fun loadNotes() {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+
+            val (quote, notes) = withMinLoadingDelay {
+                val loadedQuote = quoteDeferred?.await()
+                val loadedNotes = noteRepository.getAllNotes()
+                loadedQuote to loadedNotes
+            }
+
+            _state.update {
+                it.copy(
+                    isLoading = false,
+                    quote = quote,
+                    notes = notes,
+                )
+            }
+        }
+    }
+}
