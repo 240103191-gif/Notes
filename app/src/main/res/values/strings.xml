@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">Notes</string>
+    <string name="all_notes_title">All notes</string>
+    <string name="notes_loading">Loading...</string>
+    <string name="empty_notes_message">No notes yet</string>
+    <string name="untitled_note">Untitled</string>
+    <string name="quote_text_format">“%1$s”</string>
+    <string name="quote_author_format">— %1$s</string>
+    <plurals name="notes_count">
+        <item quantity="one">%d note</item>
+        <item quantity="other">%d notes</item>
+    </plurals>
 </resources>
