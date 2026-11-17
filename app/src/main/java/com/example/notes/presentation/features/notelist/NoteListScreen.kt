@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -38,6 +39,7 @@ import com.example.notes.R
 import com.example.notes.domain.model.Note
 import com.example.notes.domain.model.Quote
 import com.example.notes.presentation.components.NotesFab
+import com.example.notes.presentation.components.shimmer
 import com.example.notes.presentation.theme.NotesTheme
 import org.koin.androidx.compose.koinViewModel
 
@@ -81,11 +83,15 @@ private fun NoteListContent(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            if (!state.isLoading && state.notes.isNotEmpty()) NoteListItemsView(
-                quote = state.quote,
-                notes = state.notes,
-                onNoteClick = onNoteClick,
-            )
+            when {
+                state.isLoading -> NoteListShimmerView()
+                state.notes.isEmpty() -> NoteListEmptyView()
+                else -> NoteListItemsView(
+                    quote = state.quote,
+                    notes = state.notes,
+                    onNoteClick = onNoteClick,
+                )
+            }
         }
     }
 }
@@ -121,6 +127,192 @@ private fun NoteListTopBar(
             text = subtitle,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun NoteListShimmerView(
+    modifier: Modifier = Modifier,
+) {
+    val quoteShape = RoundedCornerShape(14.dp)
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(start = 16.dp, top = 4.dp, end = 16.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(quoteShape)
+                .background(MaterialTheme.colorScheme.surface)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    shape = quoteShape,
+                )
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+        ) {
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth(0.9f)
+                    .height(14.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .shimmer(),
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth(0.65f)
+                    .height(14.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .shimmer(),
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth(0.35f)
+                    .height(11.dp)
+                    .align(Alignment.End)
+                    .clip(RoundedCornerShape(4.dp))
+                    .shimmer(),
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            NoteShimmerItem(
+                firstLineFraction = 0.8f,
+                secondLineFraction = 0.6f,
+                thirdLineFraction = 0.45f,
+                titleFraction = 0.7f,
+                modifier = Modifier.weight(1f),
+            )
+            NoteShimmerItem(
+                firstLineFraction = 0.85f,
+                secondLineFraction = 0.7f,
+                thirdLineFraction = null,
+                titleFraction = 0.65f,
+                modifier = Modifier.weight(1f),
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            NoteShimmerItem(
+                firstLineFraction = 0.75f,
+                secondLineFraction = 0.5f,
+                thirdLineFraction = null,
+                titleFraction = 0.72f,
+                modifier = Modifier.weight(1f),
+            )
+            NoteShimmerItem(
+                firstLineFraction = 0.82f,
+                secondLineFraction = 0.58f,
+                thirdLineFraction = null,
+                titleFraction = 0.62f,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+@Composable
+private fun NoteShimmerItem(
+    firstLineFraction: Float,
+    secondLineFraction: Float,
+    thirdLineFraction: Float?,
+    titleFraction: Float,
+    modifier: Modifier = Modifier,
+) {
+    val cardShape = RoundedCornerShape(16.dp)
+
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(168.dp)
+                .clip(cardShape)
+                .background(MaterialTheme.colorScheme.surface)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    shape = cardShape,
+                )
+                .padding(14.dp),
+        ) {
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth(firstLineFraction)
+                    .height(14.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .shimmer(),
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth(secondLineFraction)
+                    .height(14.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .shimmer(),
+            )
+            if (thirdLineFraction != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(
+                    modifier = Modifier
+                        .fillMaxWidth(thirdLineFraction)
+                        .height(14.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .shimmer(),
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth(titleFraction)
+                .height(14.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .shimmer(),
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth(0.55f)
+                .height(11.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .shimmer(),
+        )
+    }
+}
+
+@Composable
+private fun NoteListEmptyView(
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = stringResource(R.string.empty_notes_message),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
         )
     }
 }
@@ -310,6 +502,34 @@ private fun NoteListWithoutQuoteScreenPreview() {
     NotesTheme {
         NoteListContent(
             state = noteListStateStub.copy(quote = null),
+            onCreateClick = {},
+            onNoteClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun NoteListShimmerScreenPreview() {
+    NotesTheme {
+        NoteListContent(
+            state = NoteListState(isLoading = true),
+            onCreateClick = {},
+            onNoteClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun NoteListEmptyScreenPreview() {
+    NotesTheme {
+        NoteListContent(
+            state = NoteListState(
+                isLoading = false,
+                quote = null,
+                notes = emptyList(),
+            ),
             onCreateClick = {},
             onNoteClick = {},
         )
