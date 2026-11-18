@@ -6,6 +6,8 @@
     <string name="untitled_note">Untitled</string>
     <string name="quote_text_format">“%1$s”</string>
     <string name="quote_author_format">— %1$s</string>
+    <string name="note_title_placeholder">Title</string>
+    <string name="note_content_placeholder">Write your note here...</string>
     <plurals name="notes_count">
         <item quantity="one">%d note</item>
         <item quantity="other">%d notes</item>
