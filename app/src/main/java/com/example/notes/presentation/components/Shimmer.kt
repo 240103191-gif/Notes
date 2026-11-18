@@ -14,8 +14,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
-import com.example.notes.presentation.theme.Input_Bg
-import com.example.notes.presentation.theme.Main_Shimmer
+import com.example.notes.presentation.theme.SurfaceDim
+import com.example.notes.presentation.theme.SurfaceVariant
 import kotlinx.coroutines.delay
 
 private const val SHIMMER_DURATION_MS = 800
@@ -23,8 +23,8 @@ const val MIN_SHIMMER_DURATION_MS = 500L
 
 @Composable
 fun shimmerBrush(
-    baseColor: Color = Main_Shimmer,
-    highlightColor: Color = Input_Bg,
+    baseColor: Color = SurfaceDim,
+    highlightColor: Color = SurfaceVariant,
     durationMs: Int = SHIMMER_DURATION_MS,
 ): Brush {
     val transition = rememberInfiniteTransition(label = "shimmer")
