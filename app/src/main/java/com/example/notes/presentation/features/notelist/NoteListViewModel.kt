@@ -3,6 +3,7 @@ package com.example.notes.presentation.features.notelist
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.notes.domain.model.Quote
+import com.example.notes.domain.model.Result
 import com.example.notes.domain.repository.NoteRepository
 import com.example.notes.domain.repository.QuoteRepository
 import com.example.notes.presentation.components.withMinLoadingDelay
@@ -24,7 +25,7 @@ class NoteListViewModel(
     private val navigator: AppNavigator,
 ) : ViewModel() {
 
-    private var quoteDeferred: Deferred<Quote?>? = null
+    private var quoteDeferred: Deferred<Result<Quote>>? = null
 
     private val _state = MutableStateFlow(NoteListState())
     val state: StateFlow<NoteListState> = _state
@@ -52,8 +53,10 @@ class NoteListViewModel(
             _state.update { it.copy(isLoading = true) }
 
             val (quote, notes) = withMinLoadingDelay {
-                val loadedQuote = quoteDeferred?.await()
-                val loadedNotes = noteRepository.getAllNotes()
+                val quoteResult = quoteDeferred?.await()
+                val notesResult = noteRepository.getAllNotes()
+                val loadedQuote = (quoteResult as? Result.Success)?.data
+                val loadedNotes = (notesResult as? Result.Success)?.data.orEmpty()
                 loadedQuote to loadedNotes
             }
 
