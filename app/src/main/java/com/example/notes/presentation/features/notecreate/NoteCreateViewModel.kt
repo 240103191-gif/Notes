@@ -3,6 +3,7 @@ package com.example.notes.presentation.features.notecreate
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.notes.domain.model.Note
+import com.example.notes.domain.model.Result
 import com.example.notes.domain.repository.NoteRepository
 import com.example.notes.presentation.navigation.AppNavigator
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,8 +43,7 @@ class NoteCreateViewModel(
                 content = currentState.content.trim(),
                 createdAt = System.currentTimeMillis(),
             )
-            noteRepository.saveNote(note)
-            navigator.navigateBack()
+            if (noteRepository.saveNote(note) is Result.Success) navigator.navigateBack()
         }
     }
 }
