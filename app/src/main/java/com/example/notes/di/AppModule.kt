@@ -36,7 +36,10 @@ val appModule = module {
     }
 
     single<NoteRepository> {
-        NoteRepositoryImpl()
+        NoteRepositoryImpl(
+            dao = get(),
+            mapper = get(),
+        )
     }
 
     single<QuoteRepository> {
