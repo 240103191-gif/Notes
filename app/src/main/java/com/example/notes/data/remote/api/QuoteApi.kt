@@ -1,3 +1,10 @@
 package com.example.notes.data.remote.api
 
-interface QuoteApi
+import com.example.notes.data.remote.api.dto.QuoteDto
+import retrofit2.http.GET
+
+interface QuoteApi {
+
+    @GET("quotes/random")
+    suspend fun getRandomQuote(): QuoteDto
+}
