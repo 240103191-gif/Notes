@@ -78,7 +78,10 @@ val appModule = module {
     }
 
     single<QuoteRepository> {
-        QuoteRepositoryImpl()
+        QuoteRepositoryImpl(
+            api = get(),
+            mapper = get(),
+        )
     }
 
     single {
