@@ -17,6 +17,7 @@ import com.example.notes.domain.repository.QuoteRepository
 import com.example.notes.domain.repository.ThemeRepository
 import com.example.notes.presentation.features.notecreate.NoteCreateViewModel
 import com.example.notes.presentation.features.notelist.NoteListViewModel
+import com.example.notes.presentation.features.theme.ThemeChangeViewModel
 import com.example.notes.presentation.navigation.AppNavigator
 import java.util.concurrent.TimeUnit
 import kotlinx.serialization.json.Json
@@ -121,6 +122,12 @@ val appModule = module {
         NoteCreateViewModel(
             noteRepository = get(),
             navigator = get(),
+        )
+    }
+
+    viewModel {
+        ThemeChangeViewModel(
+            themeRepository = get(),
         )
     }
 }
