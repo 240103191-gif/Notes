@@ -1,7 +1,12 @@
 package com.example.notes.di
 
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.room.Room
 import com.example.notes.data.local.NoteRepositoryImpl
+import com.example.notes.data.local.ThemeRepositoryImpl
 import com.example.notes.data.local.db.AppDatabase
 import com.example.notes.data.local.mapper.NoteMapper
 import com.example.notes.data.remote.QuoteRepositoryImpl
@@ -9,6 +14,7 @@ import com.example.notes.data.remote.api.QuoteApi
 import com.example.notes.data.remote.mapper.QuoteMapper
 import com.example.notes.domain.repository.NoteRepository
 import com.example.notes.domain.repository.QuoteRepository
+import com.example.notes.domain.repository.ThemeRepository
 import com.example.notes.presentation.features.notecreate.NoteCreateViewModel
 import com.example.notes.presentation.features.notelist.NoteListViewModel
 import com.example.notes.presentation.navigation.AppNavigator
@@ -23,6 +29,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
 private const val DATABASE_NAME = "notes.db"
+private const val SETTINGS_PREFERENCES_NAME = "settings"
 private const val QUOTE_BASE_URL = "https://dummyjson.com/"
 private const val NETWORK_TIMEOUT_SECONDS = 5L
 
@@ -38,6 +45,14 @@ val appModule = module {
 
     single {
         get<AppDatabase>().noteDao()
+    }
+
+    single<DataStore<Preferences>> {
+        PreferenceDataStoreFactory.create(
+            produceFile = {
+                androidContext().preferencesDataStoreFile(SETTINGS_PREFERENCES_NAME)
+            },
+        )
     }
 
     single {
@@ -81,6 +96,12 @@ val appModule = module {
         QuoteRepositoryImpl(
             api = get(),
             mapper = get(),
+        )
+    }
+
+    single<ThemeRepository> {
+        ThemeRepositoryImpl(
+            dataStore = get(),
         )
     }
 
