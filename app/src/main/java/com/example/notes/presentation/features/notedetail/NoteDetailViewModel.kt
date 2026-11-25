@@ -63,8 +63,10 @@ class NoteDetailViewModel(
     }
 
     fun onDeleteClick() {
+        val note = (_state.value.noteState as? LoadState.Success)?.data ?: return
+
         viewModelScope.launch {
-            if (noteRepository.deleteNote(route.noteId) is Result.Success) navigator.navigateBack()
+            if (noteRepository.deleteNote(note) is Result.Success) navigator.navigateBack()
         }
     }
 

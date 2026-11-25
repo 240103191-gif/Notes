@@ -39,8 +39,8 @@ class NoteRepositoryImpl(
         Result.Error(e.message)
     }
 
-    override suspend fun deleteNote(id: Long): Result<Unit> = try {
-        dao.deleteNoteById(id)
+    override suspend fun deleteNote(note: Note): Result<Unit> = try {
+        dao.deleteNote(mapper.toEntity(note))
         Result.Success(Unit)
     } catch (e: Exception) {
         Result.Error(e.message)
