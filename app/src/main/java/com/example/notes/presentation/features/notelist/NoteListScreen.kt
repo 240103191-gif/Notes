@@ -43,6 +43,7 @@ import com.example.notes.R
 import com.example.notes.domain.model.LoadState
 import com.example.notes.domain.model.Note
 import com.example.notes.domain.model.Quote
+import com.example.notes.presentation.components.EmptyStateView
 import com.example.notes.presentation.components.ErrorStateView
 import com.example.notes.presentation.components.NotesFab
 import com.example.notes.presentation.components.shimmer
@@ -100,6 +101,12 @@ private fun NoteListContent(
         ) {
             when (val notesState = state.notesState) {
                 is LoadState.Loading -> NoteListShimmerView()
+                is LoadState.Empty -> NoteListItemsView(
+                    quoteState = state.quoteState,
+                    notes = emptyList(),
+                    onNoteClick = onNoteClick,
+                    onRetryQuoteClick = onRetryQuoteClick,
+                )
                 is LoadState.Error -> ErrorStateView(
                     message = stringResource(R.string.error_loading_notes),
                     onRetryClick = onRetryNotesClick,
@@ -127,6 +134,7 @@ private fun NoteListTopBar(
 ) {
     val subtitle = when (notesState) {
         is LoadState.Loading -> stringResource(R.string.notes_loading)
+        is LoadState.Empty -> pluralStringResource(R.plurals.notes_count, 0, 0)
         is LoadState.Success -> pluralStringResource(
             R.plurals.notes_count,
             notesState.data.size,
@@ -350,18 +358,27 @@ private fun QuoteShimmerCard(
 }
 
 @Composable
-private fun NoteListEmptyView(
+private fun QuoteEmptyCard(
     modifier: Modifier = Modifier,
 ) {
+    val shape = RoundedCornerShape(14.dp)
+
     Box(
         modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
+            .fillMaxWidth()
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surface)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant,
+                shape = shape,
+            )
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = stringResource(R.string.empty_notes_message),
-            style = MaterialTheme.typography.bodyLarge,
+            text = stringResource(R.string.empty_quote_message),
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
@@ -391,13 +408,15 @@ private fun NoteListItemsView(
         item(span = { GridItemSpan(maxLineSpan) }) {
             when (quoteState) {
                 is LoadState.Loading -> QuoteShimmerCard()
+                is LoadState.Empty -> QuoteEmptyCard()
                 is LoadState.Success -> QuoteCard(quote = quoteState.data)
                 is LoadState.Error -> QuoteErrorCard(onRetryClick = onRetryQuoteClick)
             }
         }
 
         if (notes.isEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
-            NoteListEmptyView(
+            EmptyStateView(
+                message = stringResource(R.string.empty_notes_message),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(360.dp),
@@ -634,12 +653,28 @@ private fun NoteListQuoteErrorScreenPreview() {
 
 @Preview(showBackground = true)
 @Composable
+private fun NoteListQuoteEmptyScreenPreview() {
+    NotesTheme {
+        NoteListContent(
+            state = noteListStateStub.copy(quoteState = LoadState.Empty),
+            onCreateClick = {},
+            onNoteClick = {},
+            onRetryNotesClick = {},
+            onRetryQuoteClick = {},
+            onThemeClick = {},
+            onDismissThemeSheet = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
 private fun NoteListEmptyScreenPreview() {
     NotesTheme {
         NoteListContent(
             state = NoteListState(
                 quoteState = LoadState.Success(sampleQuote),
-                notesState = LoadState.Success(emptyList()),
+                notesState = LoadState.Empty,
             ),
             onCreateClick = {},
             onNoteClick = {},
