@@ -58,7 +58,7 @@ class NoteDetailViewModel(
                 title = currentState.title.trim(),
                 content = currentState.content.trim(),
             )
-            if (noteRepository.saveNote(updatedNote) is Result.Success) navigator.navigateBack()
+            if (noteRepository.updateNote(updatedNote) is Result.Success) navigator.navigateBack()
         }
     }
 
