@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -20,6 +21,7 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -28,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -43,6 +46,7 @@ import com.example.notes.domain.model.Quote
 import com.example.notes.presentation.components.ErrorStateView
 import com.example.notes.presentation.components.NotesFab
 import com.example.notes.presentation.components.shimmer
+import com.example.notes.presentation.features.theme.ThemeChangeBottomSheet
 import com.example.notes.presentation.theme.NotesTheme
 import org.koin.androidx.compose.koinViewModel
 
@@ -58,6 +62,8 @@ fun NoteListScreen(
         onNoteClick = viewModel::onNoteClick,
         onRetryNotesClick = viewModel::onRetryNotesClick,
         onRetryQuoteClick = viewModel::onRetryQuoteClick,
+        onThemeClick = viewModel::onThemeClick,
+        onDismissThemeSheet = viewModel::onDismissThemeSheet,
     )
 }
 
@@ -68,12 +74,17 @@ private fun NoteListContent(
     onNoteClick: (Long) -> Unit,
     onRetryNotesClick: () -> Unit,
     onRetryQuoteClick: () -> Unit,
+    onThemeClick: () -> Unit,
+    onDismissThemeSheet: () -> Unit,
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            NoteListTopBar(notesState = state.notesState)
+            NoteListTopBar(
+                notesState = state.notesState,
+                onThemeClick = onThemeClick,
+            )
         },
         floatingActionButton = {
             NotesFab(
@@ -102,11 +113,16 @@ private fun NoteListContent(
             }
         }
     }
+
+    if (state.isThemeSheetVisible) ThemeChangeBottomSheet(
+        onDismiss = onDismissThemeSheet,
+    )
 }
 
 @Composable
 private fun NoteListTopBar(
     notesState: LoadState<List<Note>>,
+    onThemeClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val subtitle = when (notesState) {
@@ -131,11 +147,25 @@ private fun NoteListTopBar(
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            text = stringResource(R.string.all_notes_title),
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(
+                modifier = Modifier.align(Alignment.Center),
+                text = stringResource(R.string.all_notes_title),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            Icon(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .size(24.dp)
+                    .clickable(onClick = onThemeClick),
+                painter = painterResource(R.drawable.ic_palette),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onBackground,
+            )
+        }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = subtitle,
@@ -580,6 +610,8 @@ private fun NoteListScreenPreview() {
             onNoteClick = {},
             onRetryNotesClick = {},
             onRetryQuoteClick = {},
+            onThemeClick = {},
+            onDismissThemeSheet = {},
         )
     }
 }
@@ -594,6 +626,8 @@ private fun NoteListQuoteErrorScreenPreview() {
             onNoteClick = {},
             onRetryNotesClick = {},
             onRetryQuoteClick = {},
+            onThemeClick = {},
+            onDismissThemeSheet = {},
         )
     }
 }
@@ -611,6 +645,8 @@ private fun NoteListEmptyScreenPreview() {
             onNoteClick = {},
             onRetryNotesClick = {},
             onRetryQuoteClick = {},
+            onThemeClick = {},
+            onDismissThemeSheet = {},
         )
     }
 }
@@ -628,6 +664,8 @@ private fun NoteListShimmerScreenPreview() {
             onNoteClick = {},
             onRetryNotesClick = {},
             onRetryQuoteClick = {},
+            onThemeClick = {},
+            onDismissThemeSheet = {},
         )
     }
 }
@@ -645,6 +683,8 @@ private fun NoteListErrorScreenPreview() {
             onNoteClick = {},
             onRetryNotesClick = {},
             onRetryQuoteClick = {},
+            onThemeClick = {},
+            onDismissThemeSheet = {},
         )
     }
 }

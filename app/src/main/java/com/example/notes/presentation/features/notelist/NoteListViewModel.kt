@@ -70,6 +70,14 @@ class NoteListViewModel(
         }
     }
 
+    fun onThemeClick() {
+        _state.update { it.copy(isThemeSheetVisible = true) }
+    }
+
+    fun onDismissThemeSheet() {
+        _state.update { it.copy(isThemeSheetVisible = false) }
+    }
+
     private fun loadNotes() {
         viewModelScope.launch {
             _state.update { it.copy(notesState = LoadState.Loading) }
