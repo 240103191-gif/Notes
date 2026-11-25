@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -56,6 +57,7 @@ fun NoteListScreen(
         onCreateClick = viewModel::onCreateClick,
         onNoteClick = viewModel::onNoteClick,
         onRetryNotesClick = viewModel::onRetryNotesClick,
+        onRetryQuoteClick = viewModel::onRetryQuoteClick,
     )
 }
 
@@ -65,6 +67,7 @@ private fun NoteListContent(
     onCreateClick: () -> Unit,
     onNoteClick: (Long) -> Unit,
     onRetryNotesClick: () -> Unit,
+    onRetryQuoteClick: () -> Unit,
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -94,6 +97,7 @@ private fun NoteListContent(
                     quoteState = state.quoteState,
                     notes = notesState.data,
                     onNoteClick = onNoteClick,
+                    onRetryQuoteClick = onRetryQuoteClick,
                 )
             }
         }
@@ -145,50 +149,12 @@ private fun NoteListTopBar(
 private fun NoteListShimmerView(
     modifier: Modifier = Modifier,
 ) {
-    val quoteShape = RoundedCornerShape(14.dp)
-
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(start = 16.dp, top = 4.dp, end = 16.dp),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(quoteShape)
-                .background(MaterialTheme.colorScheme.surface)
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant,
-                    shape = quoteShape,
-                )
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-        ) {
-            Spacer(
-                modifier = Modifier
-                    .fillMaxWidth(0.9f)
-                    .height(14.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .shimmer(),
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Spacer(
-                modifier = Modifier
-                    .fillMaxWidth(0.65f)
-                    .height(14.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .shimmer(),
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Spacer(
-                modifier = Modifier
-                    .fillMaxWidth(0.35f)
-                    .height(11.dp)
-                    .align(Alignment.End)
-                    .clip(RoundedCornerShape(4.dp))
-                    .shimmer(),
-            )
-        }
+        QuoteShimmerCard()
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -309,6 +275,51 @@ private fun NoteShimmerItem(
 }
 
 @Composable
+private fun QuoteShimmerCard(
+    modifier: Modifier = Modifier,
+) {
+    val quoteShape = RoundedCornerShape(14.dp)
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(quoteShape)
+            .background(MaterialTheme.colorScheme.surface)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant,
+                shape = quoteShape,
+            )
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+    ) {
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .height(14.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .shimmer(),
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth(0.65f)
+                .height(14.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .shimmer(),
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth(0.35f)
+                .height(11.dp)
+                .align(Alignment.End)
+                .clip(RoundedCornerShape(4.dp))
+                .shimmer(),
+        )
+    }
+}
+
+@Composable
 private fun NoteListEmptyView(
     modifier: Modifier = Modifier,
 ) {
@@ -332,6 +343,7 @@ private fun NoteListItemsView(
     quoteState: LoadState<Quote>,
     notes: List<Note>,
     onNoteClick: (Long) -> Unit,
+    onRetryQuoteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(
@@ -346,8 +358,12 @@ private fun NoteListItemsView(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        if (quoteState is LoadState.Success) item(span = { GridItemSpan(maxLineSpan) }) {
-            QuoteCard(quote = quoteState.data)
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            when (quoteState) {
+                is LoadState.Loading -> QuoteShimmerCard()
+                is LoadState.Success -> QuoteCard(quote = quoteState.data)
+                is LoadState.Error -> QuoteErrorCard(onRetryClick = onRetryQuoteClick)
+            }
         }
 
         if (notes.isEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
@@ -400,6 +416,57 @@ private fun QuoteCard(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.End,
         )
+    }
+}
+
+@Composable
+private fun QuoteErrorCard(
+    onRetryClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val cardShape = RoundedCornerShape(14.dp)
+    val buttonShape = RoundedCornerShape(10.dp)
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(cardShape)
+            .background(MaterialTheme.colorScheme.surface)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outline,
+                shape = cardShape,
+            )
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            modifier = Modifier.weight(1f),
+            text = stringResource(R.string.error_loading_quote),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Box(
+            modifier = Modifier
+                .clip(buttonShape)
+                .background(MaterialTheme.colorScheme.primary)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline,
+                    shape = buttonShape,
+                )
+                .clickable(onClick = onRetryClick)
+                .padding(horizontal = 14.dp, vertical = 6.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = stringResource(R.string.retry_button),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onPrimary,
+            )
+        }
     }
 }
 
@@ -512,6 +579,21 @@ private fun NoteListScreenPreview() {
             onCreateClick = {},
             onNoteClick = {},
             onRetryNotesClick = {},
+            onRetryQuoteClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun NoteListQuoteErrorScreenPreview() {
+    NotesTheme {
+        NoteListContent(
+            state = noteListStateStub.copy(quoteState = LoadState.Error()),
+            onCreateClick = {},
+            onNoteClick = {},
+            onRetryNotesClick = {},
+            onRetryQuoteClick = {},
         )
     }
 }
@@ -528,6 +610,7 @@ private fun NoteListEmptyScreenPreview() {
             onCreateClick = {},
             onNoteClick = {},
             onRetryNotesClick = {},
+            onRetryQuoteClick = {},
         )
     }
 }
@@ -544,6 +627,7 @@ private fun NoteListShimmerScreenPreview() {
             onCreateClick = {},
             onNoteClick = {},
             onRetryNotesClick = {},
+            onRetryQuoteClick = {},
         )
     }
 }
@@ -560,6 +644,7 @@ private fun NoteListErrorScreenPreview() {
             onCreateClick = {},
             onNoteClick = {},
             onRetryNotesClick = {},
+            onRetryQuoteClick = {},
         )
     }
 }

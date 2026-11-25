@@ -54,6 +54,22 @@ class NoteListViewModel(
         loadNotes()
     }
 
+    fun onRetryQuoteClick() {
+        viewModelScope.launch {
+            _state.update { it.copy(quoteState = LoadState.Loading) }
+
+            val quoteState = withMinLoadingDelay {
+                val deferred = viewModelScope.async {
+                    quoteRepository.getQuote()
+                }
+                quoteDeferred = deferred
+                deferred.await().toLoadState()
+            }
+
+            _state.update { it.copy(quoteState = quoteState) }
+        }
+    }
+
     private fun loadNotes() {
         viewModelScope.launch {
             _state.update { it.copy(notesState = LoadState.Loading) }
