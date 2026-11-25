@@ -48,7 +48,9 @@ class NoteListViewModel(
         navigator.navigate(Screen.NoteCreateRoute)
     }
 
-    fun onNoteClick(noteId: Long) {}
+    fun onNoteClick(noteId: Long) {
+        navigator.navigate(Screen.NoteDetailRoute(noteId = noteId))
+    }
 
     fun onRetryNotesClick() {
         loadNotes()

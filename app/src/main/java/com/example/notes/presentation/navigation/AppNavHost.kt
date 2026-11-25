@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.notes.presentation.features.notecreate.NoteCreateScreen
+import com.example.notes.presentation.features.notedetail.NoteDetailScreen
 import com.example.notes.presentation.features.notelist.NoteListScreen
 import org.koin.compose.koinInject
 
@@ -64,6 +65,10 @@ fun AppNavHost(
 
         composable<Screen.NoteCreateRoute> {
             NoteCreateScreen()
+        }
+
+        composable<Screen.NoteDetailRoute> {
+            NoteDetailScreen()
         }
     }
 }
