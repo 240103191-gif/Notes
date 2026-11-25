@@ -36,8 +36,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.notes.R
+import com.example.notes.domain.model.LoadState
 import com.example.notes.domain.model.Note
 import com.example.notes.domain.model.Quote
+import com.example.notes.presentation.components.ErrorStateView
 import com.example.notes.presentation.components.NotesFab
 import com.example.notes.presentation.components.shimmer
 import com.example.notes.presentation.theme.NotesTheme
@@ -53,6 +55,7 @@ fun NoteListScreen(
         state = state,
         onCreateClick = viewModel::onCreateClick,
         onNoteClick = viewModel::onNoteClick,
+        onRetryNotesClick = viewModel::onRetryNotesClick,
     )
 }
 
@@ -61,15 +64,13 @@ private fun NoteListContent(
     state: NoteListState,
     onCreateClick: () -> Unit,
     onNoteClick: (Long) -> Unit,
+    onRetryNotesClick: () -> Unit,
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            if (state.isLoading || state.notes.isNotEmpty()) NoteListTopBar(
-                isLoading = state.isLoading,
-                notesCount = state.notes.size,
-            )
+            NoteListTopBar(notesState = state.notesState)
         },
         floatingActionButton = {
             NotesFab(
@@ -83,12 +84,15 @@ private fun NoteListContent(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            when {
-                state.isLoading -> NoteListShimmerView()
-                state.notes.isEmpty() -> NoteListEmptyView()
-                else -> NoteListItemsView(
-                    quote = state.quote,
-                    notes = state.notes,
+            when (val notesState = state.notesState) {
+                is LoadState.Loading -> NoteListShimmerView()
+                is LoadState.Error -> ErrorStateView(
+                    message = stringResource(R.string.error_loading_notes),
+                    onRetryClick = onRetryNotesClick,
+                )
+                is LoadState.Success -> NoteListItemsView(
+                    quoteState = state.quoteState,
+                    notes = notesState.data,
                     onNoteClick = onNoteClick,
                 )
             }
@@ -98,12 +102,18 @@ private fun NoteListContent(
 
 @Composable
 private fun NoteListTopBar(
-    isLoading: Boolean,
-    notesCount: Int,
+    notesState: LoadState<List<Note>>,
     modifier: Modifier = Modifier,
 ) {
-    val subtitle = if (isLoading) stringResource(R.string.notes_loading)
-    else pluralStringResource(R.plurals.notes_count, notesCount, notesCount)
+    val subtitle = when (notesState) {
+        is LoadState.Loading -> stringResource(R.string.notes_loading)
+        is LoadState.Success -> pluralStringResource(
+            R.plurals.notes_count,
+            notesState.data.size,
+            notesState.data.size,
+        )
+        is LoadState.Error -> pluralStringResource(R.plurals.notes_count, 0, 0)
+    }
 
     Column(
         modifier = modifier
@@ -319,7 +329,7 @@ private fun NoteListEmptyView(
 
 @Composable
 private fun NoteListItemsView(
-    quote: Quote?,
+    quoteState: LoadState<Quote>,
     notes: List<Note>,
     onNoteClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
@@ -336,11 +346,17 @@ private fun NoteListItemsView(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        if (quote != null) item(span = { GridItemSpan(maxLineSpan) }) {
-            QuoteCard(quote = quote)
+        if (quoteState is LoadState.Success) item(span = { GridItemSpan(maxLineSpan) }) {
+            QuoteCard(quote = quoteState.data)
         }
 
-        items(
+        if (notes.isEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
+            NoteListEmptyView(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(360.dp),
+            )
+        } else items(
             items = notes,
             key = { it.id },
         ) { note ->
@@ -445,43 +461,46 @@ private fun NoteItemCard(
     }
 }
 
-private val noteListStateStub = NoteListState(
-    isLoading = false,
-    quote = Quote(
+private val sampleQuote = Quote(
+    id = 1L,
+    quote = "Simplicity is the ultimate sophistication.",
+    author = "Leonardo da Vinci",
+)
+
+private val sampleNotes = listOf(
+    Note(
         id = 1L,
-        quote = "qwertyuiop asdfghjkl zxcvbnm",
-        author = "fghjkl",
+        title = "Text note 31/10",
+        content = "Everything Claude code",
+        createdAt = 1700000000000L,
+        formattedDate = "18.11.2026, 16:40",
     ),
-    notes = listOf(
-        Note(
-            id = 1L,
-            title = "asdfgh",
-            content = "qwertyuiop asdfghjkl zxcvbnm",
-            createdAt = 1700000000000L,
-            formattedDate = "18.11.2026, 16:40",
-        ),
-        Note(
-            id = 2L,
-            title = "zxcvbn",
-            content = "lkjhgfdsa poiuytrewq mnbvcxz",
-            createdAt = 1700000500000L,
-            formattedDate = "18.11.2026, 14:15",
-        ),
-        Note(
-            id = 3L,
-            title = "qweasd",
-            content = "asdkjfhasd kjhasdfkjhasdf lkjhgf",
-            createdAt = 1700000800000L,
-            formattedDate = "17.11.2026, 20:05",
-        ),
-        Note(
-            id = 4L,
-            title = "tyuigh",
-            content = "mnbvcxz asdfghjkl qwerty",
-            createdAt = 1700001000000L,
-            formattedDate = "15.11.2026, 09:20",
-        ),
+    Note(
+        id = 2L,
+        title = "Template and plan",
+        content = "Spec kit helps structure clean project specifications and plans.",
+        createdAt = 1700000500000L,
+        formattedDate = "18.11.2026, 14:15",
     ),
+    Note(
+        id = 3L,
+        title = "Architecture sync",
+        content = "Meeting summary: finalize dark and light palettes, 16dp spacing and Room entities.",
+        createdAt = 1700000800000L,
+        formattedDate = "17.11.2026, 20:05",
+    ),
+    Note(
+        id = 4L,
+        title = "Shopping list",
+        content = "Milk, coffee beans, sourdough bread, dark chocolate, sparkling water.",
+        createdAt = 1700001000000L,
+        formattedDate = "15.11.2026, 09:20",
+    ),
+)
+
+private val noteListStateStub = NoteListState(
+    quoteState = LoadState.Success(sampleQuote),
+    notesState = LoadState.Success(sampleNotes),
 )
 
 @Preview(showBackground = true)
@@ -492,30 +511,7 @@ private fun NoteListScreenPreview() {
             state = noteListStateStub,
             onCreateClick = {},
             onNoteClick = {},
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun NoteListWithoutQuoteScreenPreview() {
-    NotesTheme {
-        NoteListContent(
-            state = noteListStateStub.copy(quote = null),
-            onCreateClick = {},
-            onNoteClick = {},
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun NoteListShimmerScreenPreview() {
-    NotesTheme {
-        NoteListContent(
-            state = NoteListState(isLoading = true),
-            onCreateClick = {},
-            onNoteClick = {},
+            onRetryNotesClick = {},
         )
     }
 }
@@ -526,12 +522,44 @@ private fun NoteListEmptyScreenPreview() {
     NotesTheme {
         NoteListContent(
             state = NoteListState(
-                isLoading = false,
-                quote = null,
-                notes = emptyList(),
+                quoteState = LoadState.Success(sampleQuote),
+                notesState = LoadState.Success(emptyList()),
             ),
             onCreateClick = {},
             onNoteClick = {},
+            onRetryNotesClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun NoteListShimmerScreenPreview() {
+    NotesTheme {
+        NoteListContent(
+            state = NoteListState(
+                quoteState = LoadState.Loading,
+                notesState = LoadState.Loading,
+            ),
+            onCreateClick = {},
+            onNoteClick = {},
+            onRetryNotesClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun NoteListErrorScreenPreview() {
+    NotesTheme {
+        NoteListContent(
+            state = NoteListState(
+                quoteState = LoadState.Error(),
+                notesState = LoadState.Error(),
+            ),
+            onCreateClick = {},
+            onNoteClick = {},
+            onRetryNotesClick = {},
         )
     }
 }
