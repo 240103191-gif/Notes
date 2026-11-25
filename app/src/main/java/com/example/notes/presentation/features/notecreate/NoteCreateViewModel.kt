@@ -43,7 +43,7 @@ class NoteCreateViewModel(
                 content = currentState.content.trim(),
                 createdAt = System.currentTimeMillis(),
             )
-            if (noteRepository.saveNote(note) is Result.Success) navigator.navigateBack()
+            if (noteRepository.insertNote(note) is Result.Success) navigator.navigateBack()
         }
     }
 }

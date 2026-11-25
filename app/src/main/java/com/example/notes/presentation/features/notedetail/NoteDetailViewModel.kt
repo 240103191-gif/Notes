@@ -58,13 +58,15 @@ class NoteDetailViewModel(
                 title = currentState.title.trim(),
                 content = currentState.content.trim(),
             )
-            if (noteRepository.saveNote(updatedNote) is Result.Success) navigator.navigateBack()
+            if (noteRepository.updateNote(updatedNote) is Result.Success) navigator.navigateBack()
         }
     }
 
     fun onDeleteClick() {
+        val note = (_state.value.noteState as? LoadState.Success)?.data ?: return
+
         viewModelScope.launch {
-            if (noteRepository.deleteNote(route.noteId) is Result.Success) navigator.navigateBack()
+            if (noteRepository.deleteNote(note) is Result.Success) navigator.navigateBack()
         }
     }
 

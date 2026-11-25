@@ -25,15 +25,22 @@ class NoteRepositoryImpl(
         Result.Error(e.message)
     }
 
-    override suspend fun saveNote(note: Note): Result<Unit> = try {
+    override suspend fun insertNote(note: Note): Result<Unit> = try {
         dao.insertNote(mapper.toEntity(note))
         Result.Success(Unit)
     } catch (e: Exception) {
         Result.Error(e.message)
     }
 
-    override suspend fun deleteNote(id: Long): Result<Unit> = try {
-        dao.deleteNoteById(id)
+    override suspend fun updateNote(note: Note): Result<Unit> = try {
+        dao.updateNote(mapper.toEntity(note))
+        Result.Success(Unit)
+    } catch (e: Exception) {
+        Result.Error(e.message)
+    }
+
+    override suspend fun deleteNote(note: Note): Result<Unit> = try {
+        dao.deleteNote(mapper.toEntity(note))
         Result.Success(Unit)
     } catch (e: Exception) {
         Result.Error(e.message)
