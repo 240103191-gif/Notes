@@ -36,6 +36,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.notes.R
 import com.example.notes.domain.model.LoadState
 import com.example.notes.domain.model.Note
+import com.example.notes.presentation.components.EmptyStateView
 import com.example.notes.presentation.components.ErrorStateView
 import com.example.notes.presentation.components.TitleTopBar
 import com.example.notes.presentation.components.shimmer
@@ -77,6 +78,7 @@ private fun NoteDetailContent(
         topBar = {
             when (state.noteState) {
                 is LoadState.Loading -> NoteDetailShimmerTopBar()
+                is LoadState.Empty -> NoteDetailErrorTopBar(onBackClick = onBackClick)
                 is LoadState.Error -> NoteDetailErrorTopBar(onBackClick = onBackClick)
                 is LoadState.Success -> TitleTopBar(
                     title = state.title,
@@ -92,6 +94,10 @@ private fun NoteDetailContent(
         when (state.noteState) {
             is LoadState.Loading -> NoteDetailShimmerView(
                 modifier = Modifier.padding(innerPadding),
+            )
+            is LoadState.Empty -> EmptyStateView(
+                modifier = Modifier.padding(innerPadding),
+                message = stringResource(R.string.empty_note_detail_message),
             )
             is LoadState.Error -> ErrorStateView(
                 modifier = Modifier.padding(innerPadding),
@@ -302,6 +308,24 @@ private fun NoteDetailShimmerScreenPreview() {
         NoteDetailContent(
             state = NoteDetailState(
                 noteState = LoadState.Loading,
+            ),
+            onTitleChange = {},
+            onContentChange = {},
+            onBackClick = {},
+            onSaveClick = {},
+            onDeleteClick = {},
+            onRetryClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun NoteDetailEmptyScreenPreview() {
+    NotesTheme {
+        NoteDetailContent(
+            state = NoteDetailState(
+                noteState = LoadState.Empty,
             ),
             onTitleChange = {},
             onContentChange = {},

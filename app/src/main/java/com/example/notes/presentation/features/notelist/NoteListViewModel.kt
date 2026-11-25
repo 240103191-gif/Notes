@@ -3,6 +3,7 @@ package com.example.notes.presentation.features.notelist
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.notes.domain.model.LoadState
+import com.example.notes.domain.model.Note
 import com.example.notes.domain.model.Quote
 import com.example.notes.domain.model.Result
 import com.example.notes.domain.model.toLoadState
@@ -65,7 +66,7 @@ class NoteListViewModel(
                     quoteRepository.getQuote()
                 }
                 quoteDeferred = deferred
-                deferred.await().toLoadState()
+                deferred.await().toLoadState { it.quote.isBlank() }
             }
 
             _state.update { it.copy(quoteState = quoteState) }
@@ -87,7 +88,9 @@ class NoteListViewModel(
             val (quoteState, notesState) = withMinLoadingDelay {
                 val quoteResult = quoteDeferred?.await() ?: Result.Error()
                 val notesResult = noteRepository.getAllNotes()
-                quoteResult.toLoadState() to notesResult.toLoadState()
+                val mappedQuoteState = quoteResult.toLoadState { it.quote.isBlank() }
+                val mappedNotesState = notesResult.toLoadState(List<Note>::isEmpty)
+                mappedQuoteState to mappedNotesState
             }
 
             _state.update {

@@ -18,9 +18,9 @@ class NoteRepositoryImpl(
         Result.Error(e.message)
     }
 
-    override suspend fun getNoteById(id: Long): Result<Note> = try {
+    override suspend fun getNoteById(id: Long): Result<Note?> = try {
         val note = dao.getNoteById(id)?.let(mapper::toDomain)
-        if (note != null) Result.Success(note) else Result.Error()
+        Result.Success(note)
     } catch (e: Exception) {
         Result.Error(e.message)
     }

@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.example.notes.domain.model.LoadState
 import com.example.notes.domain.model.Result
-import com.example.notes.domain.model.toLoadState
+import com.example.notes.domain.model.toItemLoadState
 import com.example.notes.domain.repository.NoteRepository
 import com.example.notes.presentation.components.withMinLoadingDelay
 import com.example.notes.presentation.navigation.AppNavigator
@@ -81,7 +81,7 @@ class NoteDetailViewModel(
             val loadedNote = (noteResult as? Result.Success)?.data
             _state.update {
                 it.copy(
-                    noteState = noteResult.toLoadState(),
+                    noteState = noteResult.toItemLoadState(),
                     title = loadedNote?.title.orEmpty(),
                     content = loadedNote?.content.orEmpty(),
                 )

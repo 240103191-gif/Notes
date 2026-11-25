@@ -3,6 +3,8 @@
     <string name="all_notes_title">All notes</string>
     <string name="notes_loading">Loading...</string>
     <string name="empty_notes_message">No notes yet</string>
+    <string name="empty_quote_message">No quote available</string>
+    <string name="empty_note_detail_message">Note not found</string>
     <string name="untitled_note">Untitled</string>
     <string name="quote_text_format">“%1$s”</string>
     <string name="quote_author_format">— %1$s</string>

@@ -13,8 +13,7 @@ class QuoteRepositoryImpl(
 
     override suspend fun getQuote(): Result<Quote> = try {
         val dto = api.getRandomQuote()
-        val quote = mapper.toDomain(dto)
-        if (quote.quote.isNotBlank()) Result.Success(quote) else Result.Error()
+        Result.Success(mapper.toDomain(dto))
     } catch (e: Exception) {
         Result.Error(e.message)
     }
