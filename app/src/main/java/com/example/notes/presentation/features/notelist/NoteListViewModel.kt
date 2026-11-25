@@ -2,8 +2,10 @@ package com.example.notes.presentation.features.notelist
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.notes.domain.model.LoadState
 import com.example.notes.domain.model.Quote
 import com.example.notes.domain.model.Result
+import com.example.notes.domain.model.toLoadState
 import com.example.notes.domain.repository.NoteRepository
 import com.example.notes.domain.repository.QuoteRepository
 import com.example.notes.presentation.components.withMinLoadingDelay
@@ -48,23 +50,48 @@ class NoteListViewModel(
 
     fun onNoteClick(noteId: Long) {}
 
+    fun onRetryNotesClick() {
+        loadNotes()
+    }
+
+    fun onRetryQuoteClick() {
+        viewModelScope.launch {
+            _state.update { it.copy(quoteState = LoadState.Loading) }
+
+            val quoteState = withMinLoadingDelay {
+                val deferred = viewModelScope.async {
+                    quoteRepository.getQuote()
+                }
+                quoteDeferred = deferred
+                deferred.await().toLoadState()
+            }
+
+            _state.update { it.copy(quoteState = quoteState) }
+        }
+    }
+
+    fun onThemeClick() {
+        _state.update { it.copy(isThemeSheetVisible = true) }
+    }
+
+    fun onDismissThemeSheet() {
+        _state.update { it.copy(isThemeSheetVisible = false) }
+    }
+
     private fun loadNotes() {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
+            _state.update { it.copy(notesState = LoadState.Loading) }
 
-            val (quote, notes) = withMinLoadingDelay {
-                val quoteResult = quoteDeferred?.await()
+            val (quoteState, notesState) = withMinLoadingDelay {
+                val quoteResult = quoteDeferred?.await() ?: Result.Error()
                 val notesResult = noteRepository.getAllNotes()
-                val loadedQuote = (quoteResult as? Result.Success)?.data
-                val loadedNotes = (notesResult as? Result.Success)?.data.orEmpty()
-                loadedQuote to loadedNotes
+                quoteResult.toLoadState() to notesResult.toLoadState()
             }
 
             _state.update {
                 it.copy(
-                    isLoading = false,
-                    quote = quote,
-                    notes = notes,
+                    quoteState = quoteState,
+                    notesState = notesState,
                 )
             }
         }

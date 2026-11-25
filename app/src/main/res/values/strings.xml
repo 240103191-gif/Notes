@@ -11,6 +11,10 @@
     <string name="choose_theme_title">Choose theme</string>
     <string name="theme_dark">Dark</string>
     <string name="theme_light">Light</string>
+    <string name="error_loading_notes">Failed to load notes</string>
+    <string name="error_loading_quote">Failed to load quote</string>
+    <string name="error_loading_note">Failed to load note</string>
+    <string name="retry_button">Retry</string>
     <plurals name="notes_count">
         <item quantity="one">%d note</item>
         <item quantity="other">%d notes</item>

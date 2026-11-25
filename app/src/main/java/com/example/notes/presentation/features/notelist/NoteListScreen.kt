@@ -13,12 +13,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -27,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -36,10 +40,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.notes.R
+import com.example.notes.domain.model.LoadState
 import com.example.notes.domain.model.Note
 import com.example.notes.domain.model.Quote
+import com.example.notes.presentation.components.ErrorStateView
 import com.example.notes.presentation.components.NotesFab
 import com.example.notes.presentation.components.shimmer
+import com.example.notes.presentation.features.theme.ThemeChangeBottomSheet
 import com.example.notes.presentation.theme.NotesTheme
 import org.koin.androidx.compose.koinViewModel
 
@@ -53,6 +60,10 @@ fun NoteListScreen(
         state = state,
         onCreateClick = viewModel::onCreateClick,
         onNoteClick = viewModel::onNoteClick,
+        onRetryNotesClick = viewModel::onRetryNotesClick,
+        onRetryQuoteClick = viewModel::onRetryQuoteClick,
+        onThemeClick = viewModel::onThemeClick,
+        onDismissThemeSheet = viewModel::onDismissThemeSheet,
     )
 }
 
@@ -61,14 +72,18 @@ private fun NoteListContent(
     state: NoteListState,
     onCreateClick: () -> Unit,
     onNoteClick: (Long) -> Unit,
+    onRetryNotesClick: () -> Unit,
+    onRetryQuoteClick: () -> Unit,
+    onThemeClick: () -> Unit,
+    onDismissThemeSheet: () -> Unit,
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            if (state.isLoading || state.notes.isNotEmpty()) NoteListTopBar(
-                isLoading = state.isLoading,
-                notesCount = state.notes.size,
+            NoteListTopBar(
+                notesState = state.notesState,
+                onThemeClick = onThemeClick,
             )
         },
         floatingActionButton = {
@@ -83,27 +98,42 @@ private fun NoteListContent(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            when {
-                state.isLoading -> NoteListShimmerView()
-                state.notes.isEmpty() -> NoteListEmptyView()
-                else -> NoteListItemsView(
-                    quote = state.quote,
-                    notes = state.notes,
+            when (val notesState = state.notesState) {
+                is LoadState.Loading -> NoteListShimmerView()
+                is LoadState.Error -> ErrorStateView(
+                    message = stringResource(R.string.error_loading_notes),
+                    onRetryClick = onRetryNotesClick,
+                )
+                is LoadState.Success -> NoteListItemsView(
+                    quoteState = state.quoteState,
+                    notes = notesState.data,
                     onNoteClick = onNoteClick,
+                    onRetryQuoteClick = onRetryQuoteClick,
                 )
             }
         }
     }
+
+    if (state.isThemeSheetVisible) ThemeChangeBottomSheet(
+        onDismiss = onDismissThemeSheet,
+    )
 }
 
 @Composable
 private fun NoteListTopBar(
-    isLoading: Boolean,
-    notesCount: Int,
+    notesState: LoadState<List<Note>>,
+    onThemeClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val subtitle = if (isLoading) stringResource(R.string.notes_loading)
-    else pluralStringResource(R.plurals.notes_count, notesCount, notesCount)
+    val subtitle = when (notesState) {
+        is LoadState.Loading -> stringResource(R.string.notes_loading)
+        is LoadState.Success -> pluralStringResource(
+            R.plurals.notes_count,
+            notesState.data.size,
+            notesState.data.size,
+        )
+        is LoadState.Error -> pluralStringResource(R.plurals.notes_count, 0, 0)
+    }
 
     Column(
         modifier = modifier
@@ -117,11 +147,25 @@ private fun NoteListTopBar(
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            text = stringResource(R.string.all_notes_title),
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(
+                modifier = Modifier.align(Alignment.Center),
+                text = stringResource(R.string.all_notes_title),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            Icon(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .size(24.dp)
+                    .clickable(onClick = onThemeClick),
+                painter = painterResource(R.drawable.ic_palette),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onBackground,
+            )
+        }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = subtitle,
@@ -135,50 +179,12 @@ private fun NoteListTopBar(
 private fun NoteListShimmerView(
     modifier: Modifier = Modifier,
 ) {
-    val quoteShape = RoundedCornerShape(14.dp)
-
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(start = 16.dp, top = 4.dp, end = 16.dp),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(quoteShape)
-                .background(MaterialTheme.colorScheme.surface)
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant,
-                    shape = quoteShape,
-                )
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-        ) {
-            Spacer(
-                modifier = Modifier
-                    .fillMaxWidth(0.9f)
-                    .height(14.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .shimmer(),
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Spacer(
-                modifier = Modifier
-                    .fillMaxWidth(0.65f)
-                    .height(14.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .shimmer(),
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Spacer(
-                modifier = Modifier
-                    .fillMaxWidth(0.35f)
-                    .height(11.dp)
-                    .align(Alignment.End)
-                    .clip(RoundedCornerShape(4.dp))
-                    .shimmer(),
-            )
-        }
+        QuoteShimmerCard()
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -299,6 +305,51 @@ private fun NoteShimmerItem(
 }
 
 @Composable
+private fun QuoteShimmerCard(
+    modifier: Modifier = Modifier,
+) {
+    val quoteShape = RoundedCornerShape(14.dp)
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(quoteShape)
+            .background(MaterialTheme.colorScheme.surface)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant,
+                shape = quoteShape,
+            )
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+    ) {
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .height(14.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .shimmer(),
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth(0.65f)
+                .height(14.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .shimmer(),
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth(0.35f)
+                .height(11.dp)
+                .align(Alignment.End)
+                .clip(RoundedCornerShape(4.dp))
+                .shimmer(),
+        )
+    }
+}
+
+@Composable
 private fun NoteListEmptyView(
     modifier: Modifier = Modifier,
 ) {
@@ -319,9 +370,10 @@ private fun NoteListEmptyView(
 
 @Composable
 private fun NoteListItemsView(
-    quote: Quote?,
+    quoteState: LoadState<Quote>,
     notes: List<Note>,
     onNoteClick: (Long) -> Unit,
+    onRetryQuoteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(
@@ -336,11 +388,21 @@ private fun NoteListItemsView(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        if (quote != null) item(span = { GridItemSpan(maxLineSpan) }) {
-            QuoteCard(quote = quote)
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            when (quoteState) {
+                is LoadState.Loading -> QuoteShimmerCard()
+                is LoadState.Success -> QuoteCard(quote = quoteState.data)
+                is LoadState.Error -> QuoteErrorCard(onRetryClick = onRetryQuoteClick)
+            }
         }
 
-        items(
+        if (notes.isEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
+            NoteListEmptyView(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(360.dp),
+            )
+        } else items(
             items = notes,
             key = { it.id },
         ) { note ->
@@ -384,6 +446,57 @@ private fun QuoteCard(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.End,
         )
+    }
+}
+
+@Composable
+private fun QuoteErrorCard(
+    onRetryClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val cardShape = RoundedCornerShape(14.dp)
+    val buttonShape = RoundedCornerShape(10.dp)
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(cardShape)
+            .background(MaterialTheme.colorScheme.surface)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outline,
+                shape = cardShape,
+            )
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            modifier = Modifier.weight(1f),
+            text = stringResource(R.string.error_loading_quote),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Box(
+            modifier = Modifier
+                .clip(buttonShape)
+                .background(MaterialTheme.colorScheme.primary)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline,
+                    shape = buttonShape,
+                )
+                .clickable(onClick = onRetryClick)
+                .padding(horizontal = 14.dp, vertical = 6.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = stringResource(R.string.retry_button),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onPrimary,
+            )
+        }
     }
 }
 
@@ -445,43 +558,46 @@ private fun NoteItemCard(
     }
 }
 
-private val noteListStateStub = NoteListState(
-    isLoading = false,
-    quote = Quote(
+private val sampleQuote = Quote(
+    id = 1L,
+    quote = "Simplicity is the ultimate sophistication.",
+    author = "Leonardo da Vinci",
+)
+
+private val sampleNotes = listOf(
+    Note(
         id = 1L,
-        quote = "qwertyuiop asdfghjkl zxcvbnm",
-        author = "fghjkl",
+        title = "Text note 31/10",
+        content = "Everything Claude code",
+        createdAt = 1700000000000L,
+        formattedDate = "18.11.2026, 16:40",
     ),
-    notes = listOf(
-        Note(
-            id = 1L,
-            title = "asdfgh",
-            content = "qwertyuiop asdfghjkl zxcvbnm",
-            createdAt = 1700000000000L,
-            formattedDate = "18.11.2026, 16:40",
-        ),
-        Note(
-            id = 2L,
-            title = "zxcvbn",
-            content = "lkjhgfdsa poiuytrewq mnbvcxz",
-            createdAt = 1700000500000L,
-            formattedDate = "18.11.2026, 14:15",
-        ),
-        Note(
-            id = 3L,
-            title = "qweasd",
-            content = "asdkjfhasd kjhasdfkjhasdf lkjhgf",
-            createdAt = 1700000800000L,
-            formattedDate = "17.11.2026, 20:05",
-        ),
-        Note(
-            id = 4L,
-            title = "tyuigh",
-            content = "mnbvcxz asdfghjkl qwerty",
-            createdAt = 1700001000000L,
-            formattedDate = "15.11.2026, 09:20",
-        ),
+    Note(
+        id = 2L,
+        title = "Template and plan",
+        content = "Spec kit helps structure clean project specifications and plans.",
+        createdAt = 1700000500000L,
+        formattedDate = "18.11.2026, 14:15",
     ),
+    Note(
+        id = 3L,
+        title = "Architecture sync",
+        content = "Meeting summary: finalize dark and light palettes, 16dp spacing and Room entities.",
+        createdAt = 1700000800000L,
+        formattedDate = "17.11.2026, 20:05",
+    ),
+    Note(
+        id = 4L,
+        title = "Shopping list",
+        content = "Milk, coffee beans, sourdough bread, dark chocolate, sparkling water.",
+        createdAt = 1700001000000L,
+        formattedDate = "15.11.2026, 09:20",
+    ),
+)
+
+private val noteListStateStub = NoteListState(
+    quoteState = LoadState.Success(sampleQuote),
+    notesState = LoadState.Success(sampleNotes),
 )
 
 @Preview(showBackground = true)
@@ -492,30 +608,26 @@ private fun NoteListScreenPreview() {
             state = noteListStateStub,
             onCreateClick = {},
             onNoteClick = {},
+            onRetryNotesClick = {},
+            onRetryQuoteClick = {},
+            onThemeClick = {},
+            onDismissThemeSheet = {},
         )
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun NoteListWithoutQuoteScreenPreview() {
+private fun NoteListQuoteErrorScreenPreview() {
     NotesTheme {
         NoteListContent(
-            state = noteListStateStub.copy(quote = null),
+            state = noteListStateStub.copy(quoteState = LoadState.Error()),
             onCreateClick = {},
             onNoteClick = {},
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun NoteListShimmerScreenPreview() {
-    NotesTheme {
-        NoteListContent(
-            state = NoteListState(isLoading = true),
-            onCreateClick = {},
-            onNoteClick = {},
+            onRetryNotesClick = {},
+            onRetryQuoteClick = {},
+            onThemeClick = {},
+            onDismissThemeSheet = {},
         )
     }
 }
@@ -526,12 +638,53 @@ private fun NoteListEmptyScreenPreview() {
     NotesTheme {
         NoteListContent(
             state = NoteListState(
-                isLoading = false,
-                quote = null,
-                notes = emptyList(),
+                quoteState = LoadState.Success(sampleQuote),
+                notesState = LoadState.Success(emptyList()),
             ),
             onCreateClick = {},
             onNoteClick = {},
+            onRetryNotesClick = {},
+            onRetryQuoteClick = {},
+            onThemeClick = {},
+            onDismissThemeSheet = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun NoteListShimmerScreenPreview() {
+    NotesTheme {
+        NoteListContent(
+            state = NoteListState(
+                quoteState = LoadState.Loading,
+                notesState = LoadState.Loading,
+            ),
+            onCreateClick = {},
+            onNoteClick = {},
+            onRetryNotesClick = {},
+            onRetryQuoteClick = {},
+            onThemeClick = {},
+            onDismissThemeSheet = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun NoteListErrorScreenPreview() {
+    NotesTheme {
+        NoteListContent(
+            state = NoteListState(
+                quoteState = LoadState.Error(),
+                notesState = LoadState.Error(),
+            ),
+            onCreateClick = {},
+            onNoteClick = {},
+            onRetryNotesClick = {},
+            onRetryQuoteClick = {},
+            onThemeClick = {},
+            onDismissThemeSheet = {},
         )
     }
 }
