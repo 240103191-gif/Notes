@@ -15,6 +15,7 @@ import com.example.notes.data.remote.mapper.QuoteMapper
 import com.example.notes.domain.repository.NoteRepository
 import com.example.notes.domain.repository.QuoteRepository
 import com.example.notes.domain.repository.ThemeRepository
+import com.example.notes.presentation.features.favourites.FavouritesViewModel
 import com.example.notes.presentation.features.notecreate.NoteCreateViewModel
 import com.example.notes.presentation.features.notedetail.NoteDetailViewModel
 import com.example.notes.presentation.features.notelist.NoteListViewModel
@@ -139,6 +140,13 @@ val appModule = module {
 
     viewModel {
         RecycleBinViewModel(
+            noteRepository = get(),
+            navigator = get(),
+        )
+    }
+
+    viewModel {
+        FavouritesViewModel(
             noteRepository = get(),
             navigator = get(),
         )
