@@ -7,5 +7,6 @@ import com.example.notes.domain.model.Quote
 data class NoteListState(
     val quoteState: LoadState<Quote> = LoadState.Loading,
     val notesState: LoadState<List<Note>> = LoadState.Loading,
+    val isMoreMenuExpanded: Boolean = false,
     val isThemeSheetVisible: Boolean = false,
 )
