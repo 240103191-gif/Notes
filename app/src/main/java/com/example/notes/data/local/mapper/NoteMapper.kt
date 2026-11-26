@@ -21,6 +21,8 @@ class NoteMapper {
         content = entity.content,
         createdAt = entity.createdAt,
         formattedDate = entity.createdAt.toFormattedDate(),
+        isFavourite = entity.isFavourite,
+        isDeleted = entity.isDeleted,
     )
 
     fun toEntity(domain: Note): NoteEntity = NoteEntity(
@@ -28,5 +30,7 @@ class NoteMapper {
         title = domain.title,
         content = domain.content,
         createdAt = domain.createdAt,
+        isFavourite = domain.isFavourite,
+        isDeleted = domain.isDeleted,
     )
 }

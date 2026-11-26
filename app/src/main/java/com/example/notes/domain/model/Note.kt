@@ -6,4 +6,6 @@ data class Note(
     val content: String,
     val createdAt: Long = 0L,
     val formattedDate: String = "",
+    val isFavourite: Boolean = false,
+    val isDeleted: Boolean = false,
 )

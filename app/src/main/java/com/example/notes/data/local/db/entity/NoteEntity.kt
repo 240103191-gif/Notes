@@ -18,4 +18,10 @@ data class NoteEntity(
 
     @ColumnInfo(name = "created_at")
     val createdAt: Long,
+
+    @ColumnInfo(name = "is_favourite")
+    val isFavourite: Boolean = false,
+
+    @ColumnInfo(name = "is_deleted")
+    val isDeleted: Boolean = false,
 )
