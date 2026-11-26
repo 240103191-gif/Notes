@@ -8,6 +8,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.notes.presentation.features.favourites.FavouritesScreen
 import com.example.notes.presentation.features.notecreate.NoteCreateScreen
 import com.example.notes.presentation.features.notedetail.NoteDetailScreen
 import com.example.notes.presentation.features.notelist.NoteListScreen
@@ -74,6 +75,10 @@ fun AppNavHost(
 
         composable<Screen.RecycleBinRoute> {
             RecycleBinScreen()
+        }
+
+        composable<Screen.FavouritesRoute> {
+            FavouritesScreen()
         }
     }
 }
