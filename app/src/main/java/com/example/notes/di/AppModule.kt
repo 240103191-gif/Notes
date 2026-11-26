@@ -18,6 +18,7 @@ import com.example.notes.domain.repository.ThemeRepository
 import com.example.notes.presentation.features.notecreate.NoteCreateViewModel
 import com.example.notes.presentation.features.notedetail.NoteDetailViewModel
 import com.example.notes.presentation.features.notelist.NoteListViewModel
+import com.example.notes.presentation.features.recyclebin.RecycleBinViewModel
 import com.example.notes.presentation.features.theme.ThemeChangeViewModel
 import com.example.notes.presentation.navigation.AppNavigator
 import java.util.concurrent.TimeUnit
@@ -131,6 +132,13 @@ val appModule = module {
     viewModel {
         NoteDetailViewModel(
             savedStateHandle = get(),
+            noteRepository = get(),
+            navigator = get(),
+        )
+    }
+
+    viewModel {
+        RecycleBinViewModel(
             noteRepository = get(),
             navigator = get(),
         )
