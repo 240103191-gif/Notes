@@ -15,4 +15,10 @@ sealed class Screen {
     data class NoteDetailRoute(
         val noteId: Long,
     ) : Screen()
+
+    @Serializable
+    data object RecycleBinRoute : Screen()
+
+    @Serializable
+    data object FavouritesRoute : Screen()
 }
