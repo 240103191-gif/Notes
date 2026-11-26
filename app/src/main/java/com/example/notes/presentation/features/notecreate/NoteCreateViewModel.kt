@@ -28,6 +28,10 @@ class NoteCreateViewModel(
         _state.update { it.copy(content = content) }
     }
 
+    fun onFavouriteClick() {
+        _state.update { it.copy(isFavourite = !it.isFavourite) }
+    }
+
     fun onBackClick() {
         navigator.navigateBack()
     }
@@ -42,6 +46,7 @@ class NoteCreateViewModel(
                 title = currentState.title.trim(),
                 content = currentState.content.trim(),
                 createdAt = System.currentTimeMillis(),
+                isFavourite = currentState.isFavourite,
             )
             if (noteRepository.insertNote(note) is Result.Success) navigator.navigateBack()
         }

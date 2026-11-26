@@ -40,6 +40,10 @@ class NoteDetailViewModel(
         _state.update { it.copy(content = content) }
     }
 
+    fun onFavouriteClick() {
+        _state.update { it.copy(isFavourite = !it.isFavourite) }
+    }
+
     fun onBackClick() {
         navigator.navigateBack()
     }
@@ -57,6 +61,7 @@ class NoteDetailViewModel(
             val updatedNote = originalNote.copy(
                 title = currentState.title.trim(),
                 content = currentState.content.trim(),
+                isFavourite = currentState.isFavourite,
             )
             if (noteRepository.updateNote(updatedNote) is Result.Success) navigator.navigateBack()
         }
@@ -66,7 +71,8 @@ class NoteDetailViewModel(
         val note = (_state.value.noteState as? LoadState.Success)?.data ?: return
 
         viewModelScope.launch {
-            if (noteRepository.deleteNote(note) is Result.Success) navigator.navigateBack()
+            val deletedNote = note.copy(isDeleted = true)
+            if (noteRepository.updateNote(deletedNote) is Result.Success) navigator.navigateBack()
         }
     }
 
@@ -84,6 +90,7 @@ class NoteDetailViewModel(
                     noteState = noteResult.toItemLoadState(),
                     title = loadedNote?.title.orEmpty(),
                     content = loadedNote?.content.orEmpty(),
+                    isFavourite = loadedNote?.isFavourite == true,
                 )
             }
         }

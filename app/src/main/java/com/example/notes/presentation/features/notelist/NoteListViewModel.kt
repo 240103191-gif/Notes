@@ -53,6 +53,36 @@ class NoteListViewModel(
         navigator.navigate(Screen.NoteDetailRoute(noteId = noteId))
     }
 
+    fun onToggleFavouriteClick(note: Note) {
+        viewModelScope.launch {
+            val updatedNote = note.copy(isFavourite = !note.isFavourite)
+            if (noteRepository.updateNote(updatedNote) is Result.Success) {
+                val notesResult = noteRepository.getAllNotes()
+                _state.update {
+                    it.copy(notesState = notesResult.toLoadState(List<Note>::isEmpty))
+                }
+            }
+        }
+    }
+
+    fun onMoreMenuClick() {
+        _state.update { it.copy(isMoreMenuExpanded = true) }
+    }
+
+    fun onDismissMoreMenu() {
+        _state.update { it.copy(isMoreMenuExpanded = false) }
+    }
+
+    fun onRecycleBinClick() {
+        _state.update { it.copy(isMoreMenuExpanded = false) }
+        navigator.navigate(Screen.RecycleBinRoute)
+    }
+
+    fun onFavouritesClick() {
+        _state.update { it.copy(isMoreMenuExpanded = false) }
+        navigator.navigate(Screen.FavouritesRoute)
+    }
+
     fun onRetryNotesClick() {
         loadNotes()
     }
@@ -74,7 +104,12 @@ class NoteListViewModel(
     }
 
     fun onThemeClick() {
-        _state.update { it.copy(isThemeSheetVisible = true) }
+        _state.update {
+            it.copy(
+                isMoreMenuExpanded = false,
+                isThemeSheetVisible = true,
+            )
+        }
     }
 
     fun onDismissThemeSheet() {
