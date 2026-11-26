@@ -33,6 +33,8 @@ fun TitleTopBar(
     onBackClick: () -> Unit,
     onSaveClick: () -> Unit,
     modifier: Modifier = Modifier,
+    isFavourite: Boolean = false,
+    onFavouriteClick: () -> Unit = {},
     hasDelete: Boolean = false,
     onDeleteClick: () -> Unit = {},
 ) {
@@ -86,6 +88,22 @@ fun TitleTopBar(
                     cursorColor = MaterialTheme.colorScheme.onBackground,
                 ),
             )
+
+            val starIconRes = if (isFavourite) R.drawable.ic_star_filled else R.drawable.ic_star
+
+            Icon(
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = onFavouriteClick,
+                    ),
+                painter = painterResource(starIconRes),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onBackground,
+            )
+            Spacer(modifier = Modifier.width(16.dp))
 
             if (hasDelete) {
                 Icon(
