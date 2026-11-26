@@ -1,8 +1,13 @@
 <resources>
     <string name="app_name">Notes</string>
     <string name="all_notes_title">All notes</string>
+    <string name="recycle_bin_title">Recycle bin</string>
+    <string name="favourites_title">Favourites</string>
+    <string name="menu_theme">Theme</string>
     <string name="notes_loading">Loading...</string>
     <string name="empty_notes_message">No notes yet</string>
+    <string name="empty_recycle_bin_message">Recycle bin is empty</string>
+    <string name="empty_favourites_message">No favourite notes</string>
     <string name="empty_quote_message">No quote available</string>
     <string name="empty_note_detail_message">Note not found</string>
     <string name="untitled_note">Untitled</string>
