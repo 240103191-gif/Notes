@@ -10,8 +10,14 @@ import com.example.notes.data.local.db.entity.NoteEntity
 @Dao
 interface NoteDao {
 
-    @Query("SELECT * FROM notes ORDER BY created_at DESC")
+    @Query("SELECT * FROM notes WHERE is_deleted = 0 ORDER BY created_at DESC")
     suspend fun getAllNotes(): List<NoteEntity>
+
+    @Query("SELECT * FROM notes WHERE is_deleted = 0 AND is_favourite = 1 ORDER BY created_at DESC")
+    suspend fun getFavouriteNotes(): List<NoteEntity>
+
+    @Query("SELECT * FROM notes WHERE is_deleted = 1 ORDER BY created_at DESC")
+    suspend fun getDeletedNotes(): List<NoteEntity>
 
     @Query("SELECT * FROM notes WHERE id = :id LIMIT 1")
     suspend fun getNoteById(id: Long): NoteEntity?

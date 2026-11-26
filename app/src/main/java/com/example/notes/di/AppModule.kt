@@ -42,7 +42,9 @@ val appModule = module {
             androidContext(),
             AppDatabase::class.java,
             DATABASE_NAME,
-        ).build()
+        )
+            .fallbackToDestructiveMigration(dropAllTables = true)
+            .build()
     }
 
     single {

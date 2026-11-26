@@ -18,6 +18,20 @@ class NoteRepositoryImpl(
         Result.Error(e.message)
     }
 
+    override suspend fun getFavouriteNotes(): Result<List<Note>> = try {
+        val notes = dao.getFavouriteNotes().map(mapper::toDomain)
+        Result.Success(notes)
+    } catch (e: Exception) {
+        Result.Error(e.message)
+    }
+
+    override suspend fun getDeletedNotes(): Result<List<Note>> = try {
+        val notes = dao.getDeletedNotes().map(mapper::toDomain)
+        Result.Success(notes)
+    } catch (e: Exception) {
+        Result.Error(e.message)
+    }
+
     override suspend fun getNoteById(id: Long): Result<Note?> = try {
         val note = dao.getNoteById(id)?.let(mapper::toDomain)
         Result.Success(note)
