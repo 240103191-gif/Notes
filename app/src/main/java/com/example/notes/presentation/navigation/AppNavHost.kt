@@ -11,6 +11,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.notes.presentation.features.notecreate.NoteCreateScreen
 import com.example.notes.presentation.features.notedetail.NoteDetailScreen
 import com.example.notes.presentation.features.notelist.NoteListScreen
+import com.example.notes.presentation.features.recyclebin.RecycleBinScreen
 import org.koin.compose.koinInject
 
 private const val TRANSITION_DURATION_MS = 250
@@ -69,6 +70,10 @@ fun AppNavHost(
 
         composable<Screen.NoteDetailRoute> {
             NoteDetailScreen()
+        }
+
+        composable<Screen.RecycleBinRoute> {
+            RecycleBinScreen()
         }
     }
 }
