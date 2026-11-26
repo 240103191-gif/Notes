@@ -31,6 +31,7 @@ fun NoteCreateScreen(
         state = state,
         onTitleChange = viewModel::onTitleChange,
         onContentChange = viewModel::onContentChange,
+        onFavouriteClick = viewModel::onFavouriteClick,
         onBackClick = viewModel::onBackClick,
         onSaveClick = viewModel::onSaveClick,
     )
@@ -41,6 +42,7 @@ private fun NoteCreateContent(
     state: NoteCreateState,
     onTitleChange: (String) -> Unit,
     onContentChange: (String) -> Unit,
+    onFavouriteClick: () -> Unit,
     onBackClick: () -> Unit,
     onSaveClick: () -> Unit,
 ) {
@@ -55,6 +57,8 @@ private fun NoteCreateContent(
                 onTitleChange = onTitleChange,
                 onBackClick = onBackClick,
                 onSaveClick = onSaveClick,
+                isFavourite = state.isFavourite,
+                onFavouriteClick = onFavouriteClick,
                 hasDelete = false,
             )
         },
@@ -99,6 +103,7 @@ private fun NoteCreateEmptyScreenPreview() {
             state = NoteCreateState(),
             onTitleChange = {},
             onContentChange = {},
+            onFavouriteClick = {},
             onBackClick = {},
             onSaveClick = {},
         )
@@ -113,9 +118,11 @@ private fun NoteCreateFilledScreenPreview() {
             state = NoteCreateState(
                 title = "asdfghjk",
                 content = "qwertyuiop asdfghjkl zxcvbnm lkjhgfdsa mnbvcxz",
+                isFavourite = true,
             ),
             onTitleChange = {},
             onContentChange = {},
+            onFavouriteClick = {},
             onBackClick = {},
             onSaveClick = {},
         )

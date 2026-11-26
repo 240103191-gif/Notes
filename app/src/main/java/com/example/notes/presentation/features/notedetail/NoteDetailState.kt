@@ -7,4 +7,5 @@ data class NoteDetailState(
     val noteState: LoadState<Note> = LoadState.Loading,
     val title: String = "",
     val content: String = "",
+    val isFavourite: Boolean = false,
 )

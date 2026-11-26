@@ -53,6 +53,7 @@ fun NoteDetailScreen(
         state = state,
         onTitleChange = viewModel::onTitleChange,
         onContentChange = viewModel::onContentChange,
+        onFavouriteClick = viewModel::onFavouriteClick,
         onBackClick = viewModel::onBackClick,
         onSaveClick = viewModel::onSaveClick,
         onDeleteClick = viewModel::onDeleteClick,
@@ -65,6 +66,7 @@ private fun NoteDetailContent(
     state: NoteDetailState,
     onTitleChange: (String) -> Unit,
     onContentChange: (String) -> Unit,
+    onFavouriteClick: () -> Unit,
     onBackClick: () -> Unit,
     onSaveClick: () -> Unit,
     onDeleteClick: () -> Unit,
@@ -85,6 +87,8 @@ private fun NoteDetailContent(
                     onTitleChange = onTitleChange,
                     onBackClick = onBackClick,
                     onSaveClick = onSaveClick,
+                    isFavourite = state.isFavourite,
+                    onFavouriteClick = onFavouriteClick,
                     hasDelete = true,
                     onDeleteClick = onDeleteClick,
                 )
@@ -160,12 +164,19 @@ private fun NoteDetailShimmerTopBar(
             Spacer(modifier = Modifier.width(12.dp))
             Spacer(
                 modifier = Modifier
-                    .fillMaxWidth(0.55f)
+                    .fillMaxWidth(0.45f)
                     .height(22.dp)
                     .clip(RoundedCornerShape(6.dp))
                     .shimmer(),
             )
             Spacer(modifier = Modifier.weight(1f))
+            Spacer(
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .shimmer(),
+            )
+            Spacer(modifier = Modifier.width(16.dp))
             Spacer(
                 modifier = Modifier
                     .size(24.dp)
@@ -273,6 +284,29 @@ private fun NoteDetailFilledScreenPreview() {
             ),
             onTitleChange = {},
             onContentChange = {},
+            onFavouriteClick = {},
+            onBackClick = {},
+            onSaveClick = {},
+            onDeleteClick = {},
+            onRetryClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun NoteDetailFavouriteScreenPreview() {
+    NotesTheme {
+        NoteDetailContent(
+            state = NoteDetailState(
+                noteState = LoadState.Success(sampleDetailNote.copy(isFavourite = true)),
+                title = sampleDetailNote.title,
+                content = sampleDetailNote.content,
+                isFavourite = true,
+            ),
+            onTitleChange = {},
+            onContentChange = {},
+            onFavouriteClick = {},
             onBackClick = {},
             onSaveClick = {},
             onDeleteClick = {},
@@ -293,6 +327,7 @@ private fun NoteDetailUntitledScreenPreview() {
             ),
             onTitleChange = {},
             onContentChange = {},
+            onFavouriteClick = {},
             onBackClick = {},
             onSaveClick = {},
             onDeleteClick = {},
@@ -311,6 +346,7 @@ private fun NoteDetailShimmerScreenPreview() {
             ),
             onTitleChange = {},
             onContentChange = {},
+            onFavouriteClick = {},
             onBackClick = {},
             onSaveClick = {},
             onDeleteClick = {},
@@ -329,6 +365,7 @@ private fun NoteDetailEmptyScreenPreview() {
             ),
             onTitleChange = {},
             onContentChange = {},
+            onFavouriteClick = {},
             onBackClick = {},
             onSaveClick = {},
             onDeleteClick = {},
@@ -347,6 +384,7 @@ private fun NoteDetailErrorScreenPreview() {
             ),
             onTitleChange = {},
             onContentChange = {},
+            onFavouriteClick = {},
             onBackClick = {},
             onSaveClick = {},
             onDeleteClick = {},
